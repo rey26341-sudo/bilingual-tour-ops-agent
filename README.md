@@ -1,4 +1,4 @@
-# Bilingual AI Workflow Agent for Tour Operations
+#Bilingual Travel Operations Agent — English & Mandarin Lead Processing
 
 A small internal travel-operations agent — **not** a customer-facing booking site — built to demonstrate multilingual workflow automation, structured AI extraction, API design, validation, database handling, and Docker deployment.
 
@@ -32,10 +32,10 @@ Chinese / English customer enquiry
 
 1. **Language Detection** — identifies whether the enquiry is in Chinese or English (and handles mixed-language input).
 2. **Gemini LLM Extraction** — pulls structured fields (destination, dates, group size, budget, urgency, etc.) out of the raw enquiry text.
-3. **Pydantic Validation** — validates the extracted data against a defined schema before it touches the database.
+3. **Pydantic Request Validation** — validates incoming API request data and response schemas.
 4. **SQLite Lead Database** — persists validated leads for downstream use.
 5. **Missing Detail Detection** — checks the validated record against required fields and flags anything the enquiry left out.
-6. **Human Review Routing** — A lead is routed for human review when essential travel details are missing or when the enquiry is marked urgent. This ensures that incomplete or time-sensitive requests are not treated as ready-to-process travel bookings.
+6. **Human Review Routing** — A lead is routed for human review when essential travel details are missing or when the enquiry is marked urgent. This prevents incomplete or time-sensitive requests from being treated as ready-to-process travel bookings.
 7. **Bilingual Operations Summary** — produces a staff-facing summary in both languages, covering what was extracted, what's missing, and whether it needs review.
 
 ## Folder Structure
@@ -150,7 +150,7 @@ Roughly: *a customer wants to travel to Dubai on August 15th, a group of 4, with
 
 The agent detects the language, extracts the structured fields (destination, date, group size, budget, urgency), validates them, stores the lead in SQLite, flags any missing details, and returns a bilingual operations summary.
 
-## CSV Export
+
 
 ## Error Handling and Validation
 
@@ -202,19 +202,19 @@ FastAPI and Pydantic validate incoming request data before processing. Each enqu
 
 ## What This Mandarin Test Case Demonstrates
 
-- Mandarin customer enquiry handling
-- LLM-based information extraction
-- Pydantic validation
-- SQLite database storage
-- Human-review routing
-- CSV export
-- Bilingual internal staff summary
-- Docker deployment
-- Swagger API documentation at `/docs`
-- Travel lead automation
-- Structured data processing
-- Backend API development
-- Database workflow
+* Mandarin customer enquiry handling
+* Gemini-based information extraction
+* Pydantic request and response validation
+* SQLite database storage
+* Missing-detail detection and human-review routing
+* Bilingual internal staff summary
+* Docker deployment
+* Swagger API documentation at `/docs`
+* Travel lead automation
+* Structured data processing
+* Backend API development
+* Database workflow
+
 
 ## Running Tests
 
