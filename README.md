@@ -12,7 +12,7 @@ When a Chinese or English travel enquiry comes in, this agent turns it into:
 - A human-review flag when the enquiry needs manual attention
 
 ## Architecture
-
+```
 Chinese / English customer enquiry
               ↓
       Language Detection
