@@ -35,7 +35,7 @@ Chinese / English customer enquiry
 3. **Pydantic Validation** — validates the extracted data against a defined schema before it touches the database.
 4. **SQLite Lead Database** — persists validated leads for downstream use.
 5. **Missing Detail Detection** — checks the validated record against required fields and flags anything the enquiry left out.
-6. **Human Review Routing** — leads with missing details or low-confidence extraction are marked for manual review rather than auto-processed. *(Adjust this description to match how your `workflow_service.py` actually flags/queues them — e.g. a `needs_review` column, a separate table, or a notification.)*
+6. **Human Review Routing** — A lead is routed for human review when essential travel details are missing or when the enquiry is marked urgent. This ensures that incomplete or time-sensitive requests are not treated as ready-to-process travel bookings.
 7. **Bilingual Operations Summary** — produces a staff-facing summary in both languages, covering what was extracted, what's missing, and whether it needs review.
 
 ## Folder Structure
@@ -152,7 +152,29 @@ The agent detects the language, extracts the structured fields (destination, dat
 
 ## CSV Export
 
-Validated leads can be exported to CSV for handoff to staff who work outside the API. *(Document the actual export endpoint or command here, e.g. `GET /leads/export` — update this section to match your implementation.)*
+## Error Handling and Validation
+
+If Gemini extraction fails because of an unavailable API key, network issue, rate limit, or invalid model response, the service returns a safe default extraction result instead of failing the API request.
+
+The workflow then identifies missing travel details and routes the enquiry for human review. This keeps the service operational when the LLM provider is temporarily unavailable.
+
+FastAPI and Pydantic validate incoming request data before processing. Each enquiry must contain a valid `message` field. Invalid requests return FastAPI’s standard `422 Validation Error` response.
+
+## Current API Endpoints
+
+| Method | Endpoint         | Purpose                                                                                                                                    |
+| ------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `POST` | `/leads/process` | Processes an English or Mandarin travel enquiry, extracts details with Gemini, saves the lead, and returns a bilingual operations summary. |
+| `GET`  | `/leads`         | Returns saved travel leads from the SQLite database.                                                                                       |
+| `GET`  | `/docs`          | Opens the interactive Swagger API documentation.                                                                                           |
+
+## Planned Enhancements
+
+* CSV export for processed travel leads
+* Lightweight operations dashboard
+* Persistent database volume for Docker deployment
+* Expanded automated test coverage
+
 
 ## Screenshots
 
