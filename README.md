@@ -198,8 +198,34 @@ FastAPI and Pydantic validate incoming request data before processing. Each enqu
 
 <img width="1920" height="1020" alt="Final output 1" src="https://github.com/user-attachments/assets/94fe753f-4585-4199-8e6f-2df9aaf966c1" />
 
-<img width="1920" height="1020" alt="Final output 2" src="https://github.com/user-attachments/assets/b3ecb438-787c-441c-9920-8e231dd77d2b" />
 
+<img width="1920" height="1020" alt="Final output 2" src="https://github.com/user-attachments/assets/b3ecb438-787c-441c-9920-8e231dd77d2b" />
+<img width="1920" height="1020" alt="Screenshot 2026-07-16 105750" src="https://github.com/user-attachments/assets/3535d6da-c4a5-404d-a0c1-49f171e21d75" />
+the following proof of screenshots explains 
+
+✅ POST /documents/upload endpoint is working
+✅ PDF validation works
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/33f653e4-36cd-4c9c-824a-bf5559cf58b3" />
+
+✅ PDF is uploaded successfully
+✅ File is saved to documents/
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/8cb9b357-089f-4456-8f0c-a8a40858e767" />
+
+✅ FastAPI router is registered correctly
+✅ Swagger UI is working
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/856813c8-e015-456a-aa09-9415ba4fe6eb" />
+FOUNDATION BLOCK OF RAG (Retrieval-Augumented Generation) system is implemented when
+✅PDF uploaded successfully
+✅ PyMuPDF opened the file
+✅ Text extraction worked
+✅ The text is ready for AI processing
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/e838fce8-018c-416d-bc49-b1c927f12a0f" />
+After this i can confirm that my pipeline works like this 
+**PDF --upload API -- documents/ --PyMuPDF --Extract Text **
+
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/0b09b057-d5b3-4f2c-80ed-d7254dee4eed" />
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/34e15938-900e-4ddc-aebd-688aa6921a84" />
+WHY OVERLAPPING CHUNKS! If information is split exactly at a chunk boundary, important context can be lost. By repeating a small portion of the previous chunk (the overlap), related information remains available in adjacent chunks, improving retrieval quality when performing semantic search.
 ## What This Mandarin Test Case Demonstrates
 
 * Mandarin customer enquiry handling
