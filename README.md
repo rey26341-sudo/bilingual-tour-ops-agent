@@ -219,13 +219,511 @@ FOUNDATION BLOCK OF RAG (Retrieval-Augumented Generation) system is implemented 
 ✅ PyMuPDF opened the file
 ✅ Text extraction worked
 ✅ The text is ready for AI processing
+
 <img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/e838fce8-018c-416d-bc49-b1c927f12a0f" />
+
 After this i can confirm that my pipeline works like this 
+
 **PDF --upload API -- documents/ --PyMuPDF --Extract Text **
 
 <img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/0b09b057-d5b3-4f2c-80ed-d7254dee4eed" />
+
 <img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/34e15938-900e-4ddc-aebd-688aa6921a84" />
-WHY OVERLAPPING CHUNKS! If information is split exactly at a chunk boundary, important context can be lost. By repeating a small portion of the previous chunk (the overlap), related information remains available in adjacent chunks, improving retrieval quality when performing semantic search.
+
+WHY OVERLAPPING CHUNKS! If information is split exactly at a chunk boundary, important context can be lost. By repeating a small portion of the previous chunk (the overlap), related information remains available in adjacent chunks, improving retrieval quality when performing semantic search. so  FastAPI,Lead Processing,PDF Upload,PDF Text Extraction,Document Chunking is implemented
+
+
+**production-style RAG system**  --*GENERTAE EMBEDDINGS*
+what is embeddings? computers don't understand languages
+for example,
+```
+" i want to visit malaysia."
+```
+it is just a text to computer. we convert it into numbers:
+```
+[-0.23,
+ 0.88,
+ 0.17,
+ ...
+ 0.04]
+```
+this numeric representation is called embeddings. similar meanings produce similar vectors.
+
+Next:
+⬜ Sentence Embeddings
+⬜ Qdrant Vector DB
+⬜ Semantic Search
+⬜ Gemini RAG
+
+--*SENTENCE TRANSFORMERS*
+```
+all-MiniLM-L6-v2
+```
+Why?
+
+* Small (~90 MB)
+* Fast
+* Industry standard
+* 384-dimensional vectors
+* Excellent for learning RAG
+
+---
+
+# Step 1 — Install packages
+```bash
+pip install sentence-transformers
+```
+```bash
+pip freeze > requirements.txt
+```
+# Step 2 — Create the embedding service
+```bash
+touch app/services/embedding_service.py
+```
+```bash
+nano app/services/embedding_service.py
+```
+# Step 3 — Test embeddings
+```bash
+nano test_embedding.py
+```
+# Run it
+```bash
+python test_embedding.py
+```
+Each chunk becomes searchable by meaning instead of keywords. the output confirms this
+
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/14b585de-12db-4faa-9ff3-9c81e4ba8b99" />
+
+therefore every chunk now has its own vector.
+✅ PDF Upload
+✅ PDF Text Extraction
+✅ Intelligent Chunking
+✅ Sentence Transformer Embeddings
+
+Why not store raw text?---Because raw text cannot be searched semantically. Embeddings let us compare meaning using vector similarity.
+Why chunk before embedding?---Embedding an entire document loses precision and can exceed model limits. Chunking allows retrieval of only the relevant sections.
+Why `all-MiniLM-L6-v2`?
+* Lightweight
+* Fast inference
+* Strong retrieval performance
+* 384-dimensional embeddings
+* Commonly used in RAG tutorials and production prototypes
+
+once the test succeeds, it was committed to github repository
+# Commit
+```bash
+git add .
+git commit -m "feat: add sentence-transformer embedding generation"
+```
+
+## **Qdrant**.
+
+From now,Bilingual tour operations agent starts behaving like an enterprise knowledge assistant rather than a standard chatbot.
+
+🎉 **Outstanding! You've completed the AI core of the RAG pipeline.**
+
+Your output confirms everything is working:
+
+```text
+Chunks: 4
+Embeddings: 4
+Embedding Dimension: 384
+
+First 10 numbers:
+[-0.1192, -0.0303, 0.0282, ...]
+```
+
+This means:
+
+* ✅ PDF Upload
+* ✅ PDF Text Extraction
+* ✅ Intelligent Chunking
+* ✅ Sentence Transformer Embeddings
+
+This is no longer a CRUD API—it's becoming an AI application.
+
+---
+
+# 🏗️ Current Architecture
+
+```text
+                PDF
+                 │
+                 ▼
+        /documents/upload
+                 │
+                 ▼
+        documents/
+                 │
+                 ▼
+      extract_text()
+                 │
+                 ▼
+       chunk_text()
+                 │
+                 ▼
+ generate_embeddings()
+                 │
+                 ▼
+     384-d vectors ✅
+```
+
+The next missing component is the **Vector Database**.
+
+---
+
+# Phase 2.5 — Integrate Qdrant
+
+## What is Qdrant?
+
+Right now your vectors exist only in memory:
+
+```python
+embeddings = [
+    [-0.12, 0.45, ...],
+    [0.09, -0.34, ...]
+]
+```
+
+If the application stops:
+
+```text
+Memory
+   ↓
+Lost ❌
+```
+
+A vector database stores them permanently and lets you search by similarity.
+
+```text
+Chunk
+      ↓
+Embedding
+      ↓
+Qdrant
+      ↓
+Similarity Search
+```
+
+# Why i chose Qdrant? --Qdrant is an open-source vector database optimized for semantic search. It stores embeddings efficiently and performs nearest-neighbor search using indexes such as HNSW, making retrieval fast even for millions of vectors.
+
+# Install Qdrant Client
+
+```bash
+pip install qdrant-client
+```
+
+Then update:
+
+```bash
+pip freeze > requirements.txt
+```
+
+---
+
+#Create the Vector Service
+
+```bash
+touch app/services/vector_service.py
+```
+```bash
+nano app/services/vector_service.py
+```
+
+Replace the file with:
+
+```python
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams
+
+client = QdrantClient(path="vector_store")
+
+
+COLLECTION_NAME = "tour_documents"
+
+
+def create_collection():
+    """
+    Create the vector collection if it doesn't exist.
+    """
+
+    collections = client.get_collections().collections
+
+    existing = [c.name for c in collections]
+
+    if COLLECTION_NAME not in existing:
+
+        client.create_collection(
+            collection_name=COLLECTION_NAME,
+            vectors_config=VectorParams(
+                size=384,
+                distance=Distance.COSINE
+            )
+        )
+
+        print("Collection created.")
+
+    else:
+
+        print("Collection already exists.")
+```
+
+---
+
+# Why `size=384`?
+
+Because your embedding model:
+
+```text
+all-MiniLM-L6-v2
+```
+
+always produces:
+
+```text
+384 numbers
+```
+
+Every vector stored in this collection must have the same dimension.
+
+---
+
+# Step 3 — Test Collection Creation
+
+
+```bash
+nano test_qdrant.py
+```
+Run:
+```bash
+python test_qdrant.py
+```
+
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/3f7d82d8-520b-45ce-8be4-8fa2aa76eae4" />
+
+This confirms Qdrant is initialized correctly. this project is using a real vector database.
+✅ Qdrant installed correctly
+✅ Local vector database created
+✅ Collection created
+✅ Vector dimension (384) is valid
+
+```text
+Exception ignored in:
+ImportError: sys.meta_path is None, Python is likely shutting down
+```
+This happens because Python is exiting and the Qdrant client is trying to clean itself up during interpreter shutdown.this can be solved when FastAPI dependency injection or manage the client lifecycle more explicitly used in future cases.
+
+
+# Store Embeddings --Once the collection is working, we'll extend `vector_service.py` with an `upsert_embeddings()` function that stores:
+
+* the embedding vector,
+* the original chunk text,
+* document metadata (filename, chunk number, etc.).
+
+This metadata is what we'll retrieve later to send to Gemini.
+
+---
+
+# therefore the updated Architecture will be like this
+
+```text
+PDF
+ │
+ ▼
+Upload
+ │
+ ▼
+Extract Text
+ │
+ ▼
+Chunk Text
+ │
+ ▼
+Embeddings
+ │
+ ▼
+Qdrant Collection
+```
+
+---
+
+# Why not store embeddings in SQLite? -SQLite can store vectors, but it doesn't support efficient nearest-neighbor search. Qdrant is built specifically for vector similarity search and scales much better.
+
+# Why use cosine distance? -Cosine similarity compares the direction of vectors rather than their magnitude. It's commonly used with sentence embeddings because it captures semantic similarity effectively.
+
+---
+
+# Commit Once `test_qdrant.py` works: git is committed to every tests
+After Qdrant is storing vectors, we'll build the most exciting feature:
+
+```text
+User Question
+      │
+      ▼
+Generate Question Embedding
+      │
+      ▼
+Search Qdrant
+      │
+      ▼
+Top 5 Relevant Chunks
+      │
+      ▼
+Send Context to Gemini
+      │
+      ▼
+Grounded AI Answer
+```
+
+At this point, the project **Bilingual Tour Operations Agent** will become a true **RAG-powered enterprise AI assistant** that answers questions using uploaded travel documents instead of relying only on the LLM's general knowledge.
+
+
+# Store Embeddings in Qdrant
+
+```
+nano app/services/vector_service.py
+```
+
+# Creating a new test:
+
+```bash
+nano test_store.py
+```
+
+TESTING THE ACTUAL RAG RETRIEVAL PIPELINE:
+```bash
+python test_store.py
+```
+
+but 'test_store.py' fails **not a bug in code**. It's a network request to Hugging Face timing out. also 'test_embedding.py' ran successfully already, the model is already downloaded and cached.During the next run, the `sentence-transformers` library is trying to check for additional files (such as adapter metadata), and Hugging Face is temporarily returning a 504 Gateway Timeout.
+
+```
+HTTP Error 504
+https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/...
+```
+Many temporary 504 errors disappear on the second attempt.but it continues for this project..does the model is already cached?
+
+```text
+Exception ignored in:
+QdrantClient.__del__()
+
+ImportError: sys.meta_path is None,
+Python is likely shutting down
+```
+
+This **isn't actually a failure**.
+
+It happens because:
+
+1. Your script finished successfully.
+2. Python begins shutting down.
+3. Qdrant tries to close itself.
+4. Python has already unloaded some modules.
+5. It prints this harmless warning.
+
+This is a common destructor (`__del__`) warning.
+
+---
+
+verified with:
+```bash
+ls ~/.cache/huggingface/hub
+```
+
+for more details:
+
+```bash
+find ~/.cache -type d | grep all-MiniLM
+```
+
+This output confirms the model is **fully downloaded and cached**. FORCING IT TO WORK **OFFLINE** IS BETTER FOR DEVELOPMENT.
+
+```
+~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2
+```
+
+## UPDATING 'embedding_service.py' by replacing scripts in `app/services/embedding_service.py`
+so modifying `embedding_service.py` to load the model **only from the local cache**, avoiding unnecessary online checks.
+
+```python
+from sentence_transformers import SentenceTransformer
+
+# Load the model only from the local cache
+model = SentenceTransformer(
+    "all-MiniLM-L6-v2",
+    local_files_only=True
+)
+
+
+def generate_embeddings(chunks: list[str]) -> list[list[float]]:
+    """
+    Generate vector embeddings for document chunks.
+    """
+
+    embeddings = model.encode(
+        chunks,
+        convert_to_numpy=True
+    )
+
+    return embeddings.tolist()
+```
+
+
+# testing again
+
+```bash
+python test_store.py
+```
+
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/5c1f11b0-54b3-4598-99b9-85a60a04ec9c" />
+
+
+```bash
+ Collection already exists.
+ Stored 4 document chunks.
+```
+this proves that the **pipeline is completed**. if the caches agin appears or fails, verifying these scripts can help. 
+
+```bash
+cat app/services/embedding_service.py
+```
+
+```bash
+cat app/services/vector_service.py
+```
+
+```bash
+cat test_store.py
+```
+
+
+
+
+
+**current status** -- 
+PDF Upload,PDF Parsing,Chunking,SentenceTransformer Embeddings,Local Qdrant Vector Database,Vector Storage was verified successfully.
+**SentenceTransformer model loaded successfully.**
+**Collection already exists.**
+**Qdrant database is working. It found your existing collection instead of creating a new one.**
+**Stored 4 document chunks**
+**PDF was chunked and embedded successfully**
+
+
+**CURRENT ARCHITECTURE**
+
+```
+PDF
+   ↓
+Chunking
+   ↓
+SentenceTransformer Embeddings
+   ↓
+Qdrant Vector DB
+```
+
+
+
 ## What This Mandarin Test Case Demonstrates
 
 * Mandarin customer enquiry handling
