@@ -319,11 +319,7 @@ git commit -m "feat: add sentence-transformer embedding generation"
 
 ## **Qdrant**.
 
-From now,Bilingual tour operations agent starts behaving like an enterprise knowledge assistant rather than a standard chatbot.
-
-🎉 **Outstanding! You've completed the AI core of the RAG pipeline.**
-
-Your output confirms everything is working:
+From now,Bilingual tour operations agent starts behaving like an enterprise knowledge assistant and the output confirms everything is working:
 
 ```text
 Chunks: 4
@@ -345,7 +341,7 @@ This is no longer a CRUD API—it's becoming an AI application.
 
 ---
 
-# 🏗️ Current Architecture
+# Current Architecture
 
 ```text
                 PDF
@@ -373,11 +369,11 @@ The next missing component is the **Vector Database**.
 
 ---
 
-# Phase 2.5 — Integrate Qdrant
+# Integrate Qdrant
 
 ## What is Qdrant?
 
-Right now your vectors exist only in memory:
+Right now vectors exist only in memory:
 
 ```python
 embeddings = [
@@ -548,13 +544,13 @@ Qdrant Collection
 
 ---
 
-# Why not store embeddings in SQLite? -SQLite can store vectors, but it doesn't support efficient nearest-neighbor search. Qdrant is built specifically for vector similarity search and scales much better.
+#Why not store embeddings in SQLite? -SQLite can store vectors, but it doesn't support efficient nearest-neighbor search. Qdrant is built specifically for vector similarity search and scales much better.
 
-# Why use cosine distance? -Cosine similarity compares the direction of vectors rather than their magnitude. It's commonly used with sentence embeddings because it captures semantic similarity effectively.
+#Why use cosine distance? -Cosine similarity compares the direction of vectors rather than their magnitude. It's commonly used with sentence embeddings because it captures semantic similarity effectively.
 
 ---
 
-# Commit Once `test_qdrant.py` works: git is committed to every tests
+#Commit Once `test_qdrant.py` works: git is committed to every tests
 After Qdrant is storing vectors, we'll build the most exciting feature:
 
 ```text
